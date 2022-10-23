@@ -150,6 +150,7 @@ mutualproximity::normalize(
         float* sim)
 {
     if (seed_position < 0 || seed_position >= (int)norm_facts.size()) {
+        printf("seed_position: %d less than 0 or more than norm_facts: %d\n", seed_position, (int)norm_facts.size() );
         return -1;
     }
     float seed_mu = norm_facts[seed_position].mu;
@@ -157,6 +158,7 @@ mutualproximity::normalize(
     for (int i = 0; i < length; i++) {
         int pos = other_positions[i];
         if (pos < 0 || pos >= (int)norm_facts.size()) {
+            printf("pos: %d less than 0 or more than norm_facts: %d\n", pos, (int)norm_facts.size() );
             return -1;
         }
         if (pos == seed_position) {
@@ -172,6 +174,7 @@ mutualproximity::normalize(
         double p1 = 1 - normcdf((d - seed_mu)/seed_std);
         double p2 = 1 - normcdf((d - norm_facts[pos].mu)/norm_facts[pos].std);
         sim[i] = 1 - p1*p2;
+        // printf("normalized-sim: %f\n", *sim);
     }
     return 0;
 }

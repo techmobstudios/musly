@@ -9,6 +9,8 @@ cmake_minimum_required(VERSION 2.8)
 project(musly)
 set(MUSLY_VERSION "0.2")
 add_definitions(-DMUSLY_VERSION="${MUSLY_VERSION}")
+# add_definitions(-ltbb)
+
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions(-Wall -g)
@@ -55,9 +57,11 @@ if (USE_OPENMP)
 endif ()
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+set(-DCMAKE_PREFIX_PATH="/usr/local/Cellar/tbb/2021.6.0/")
 
 find_package(Eigen3 REQUIRED)
 find_package(LibAV 0.8 COMPONENTS avcodec avformat avutil REQUIRED)
+find_package(TBB REQUIRED)
 
 include_directories(
     "${PROJECT_BINARY_DIR}"

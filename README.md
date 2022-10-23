@@ -171,3 +171,8 @@ cmake -G"Eclipse CDT4 - Unix Makefiles"\
 from an empty directory. The directory is filled with Eclipse project
 information which can be imported as an Eclipse project.
 
+## Link to TBB 2019_U8 Install instructions
+https://solarianprogrammer.com/2019/05/09/cpp-17-stl-parallel-algorithms-gcc-intel-tbb-linux-macos/
+
+set (CMAKE_CXX_STANDARD 14)
+ in CMakeCXXCompiler.cmake

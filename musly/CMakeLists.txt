@@ -5,7 +5,10 @@
 
 include_directories(
     ${EIGEN3_INCLUDE_DIR})
+    
+list(APPEND CMAKE_MODULE_PATH "/usr/local/tbb-2019_U8/")
 
+find_package(TBB REQUIRED)
 
 add_executable(musly
     tools.cpp
@@ -15,6 +18,8 @@ add_executable(musly
     main.cpp)
 
 target_link_libraries(musly
-    libmusly)
+    libmusly 
+        TBB::tbb
+)
 
 install(TARGETS musly DESTINATION bin)

@@ -12,10 +12,14 @@
 
 #include <algorithm>
 #include <Eigen/Core>
-
+#include <iostream>
 #include "minilog.h"
 #include "windowfunction.h"
 #include "timbre.h"
+#include <stdio.h>
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
+
 
 
 namespace musly {
@@ -134,25 +138,50 @@ timbre::similarity_raw(
     g0.covar = &track[track_covar];
     g0.covar_logdet = &track[track_logdet];
 
-    // create the temporary buffer required for the Jensen-Shannon divergence
-    musly_track* tmp_t = track_alloc();
+    /*musly_track* tmp_t = track_alloc();
     gaussian tmp;
     tmp.mu = &tmp_t[track_mu];
     tmp.covar = &tmp_t[track_covar];
-    tmp.covar_logdet = &tmp_t[track_logdet];
+    tmp.covar_logdet = &tmp_t[track_logdet];*/
+
+
+    /*for(int m = 0; m < 325; m++){
+       float* mu = &g0.mu[m];
+       float* covar = &g0.covar[m];
+       float* covar_logdet = &g0.covar_logdet[m];
+
+       printf("g0.mu%d: %f\n",m, *mu);
+       printf("g0.covar%d: %f\n", m, *covar);
+       printf("g0.covar_logdet%d: %f\n", m, *covar_logdet);
+    }*/
+
+    // create the temporary buffer required for the Jensen-Shannon divergence
 
     // iterate over all musly_tracks to compute the Jensen-Shannon divergence
-    for (int i = 0; i < length; i++) {
-        gaussian gi;
-        musly_track* track1 = tracks[i];
-        gi.mu = &track1[track_mu];
-        gi.covar = &track1[track_covar];
-        gi.covar_logdet = &track1[track_logdet];
+   // for (int i = 0; i < length; i++) {
+    auto values = std::vector<float>(length);
 
-        similarities[i] = gs.jensenshannon(g0, gi, tmp);
-    }
+    tbb::parallel_for (0, length, [&](int i) {
 
-    delete[] tmp_t;
+           musly_track* tmp_t = track_alloc();
+            gaussian tmp;
+            tmp.mu = &tmp_t[track_mu];
+            tmp.covar = &tmp_t[track_covar];
+            tmp.covar_logdet = &tmp_t[track_logdet];
+
+            //int i = r;
+            gaussian gi;
+            musly_track* track1 = tracks[i];
+            gi.mu = &track1[track_mu];
+            gi.covar = &track1[track_covar];
+            gi.covar_logdet = &track1[track_logdet];
+
+            similarities[i] = gs.jensenshannon(g0, gi, tmp);
+            //float* sim = &values[i];
+        delete[] tmp_t;
+    });
+    //similarities = values.data();
+    //delete[] tmp_t;
 }
 
 
@@ -173,16 +202,32 @@ timbre::similarity(
     // compute raw similarities
     similarity_raw(track, tracks, length, similarities);
 
+    int* id = &seed_trackid;
     // normalize with mp
     // - lookup positions of trackids in the ordered_idpool
     int seed_position = idpool.position_of(seed_trackid);
+    printf("seed_trackid: %d\n", *id);
+    printf("seed_position: %d\n", seed_position);
+    printf("idpool size: %d\n", (int)idpool.get_size());
     int* other_positions = new int[length];
+
     for (int i = 0; i < length; i++) {
+    //tbb::parallel_for (0, length, [&](int i) {
         other_positions[i] = idpool.position_of(trackids[i]);
-    }
+    }//);
+
+    /*for (int i = 0; i < length; i++) {
+        printf("sim%d: %f\n",i, similarities[i]);
+    }*/
+
     // - call mp.normalize with these positions
     int res = mp.normalize(seed_position, other_positions, length, similarities);
+    printf("results: %d\n", res);
+
     delete[] other_positions;
+    /*for (int i = 0; i < length; i++) {
+        printf("sim%d: %f\n",i, similarities[i]);
+    }*/
 
     return res;
 }
@@ -222,7 +267,7 @@ timbre::add_tracks(
     for (int i = 0; i < length; i++) {
         similarity_raw(tracks[i], mp.get_normtracks()->data(),
                 mp.get_normtracks()->size(), sim.data());
-
+        
         mp.set_normfacts(pos + i, sim);
     }
     return 0;
@@ -330,6 +375,8 @@ timbre::serialize_trackdata(
         for (int i = skip_tracks; i < skip_tracks + num_tracks; i++) {
             *(musly_trackid*)(buffer) = idpool[i];
             buffer += sizeof(musly_trackid);
+
+
             mp.get_normfacts(i,
                     (float*)(buffer),
                     (float*)(buffer + sizeof(float)));
@@ -350,6 +397,13 @@ timbre::deserialize_trackdata(
     for (int i = 0; i < num_tracks; i++) {
         idpool.add_ids((musly_trackid*)buffer, 1);
         buffer += sizeof(musly_trackid);
+            // will need logs for testing reading jukebox      
+            //float* mu = (float*)(buffer);
+            //float* std = (float*)(buffer + sizeof(float));
+
+            //printf("mu%d: %f\n",i, *mu);
+            //printf("std%d: %f\n",i, *std);
+
         mp.set_normfacts(had_tracks + i,
                 *(float*)(buffer),
                 *(float*)(buffer + sizeof(float)));

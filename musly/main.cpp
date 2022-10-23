@@ -389,6 +389,9 @@ compute_similarity(
         }
         ids = &alltrackids;
 
+        //std::cout << "Similarities Completed!!" << std::endl;
+
+
     // use the results of the pre-filter
     } else {
         std::vector<musly_track*> guess_tracks(guess_len);
@@ -408,6 +411,7 @@ compute_similarity(
     for (int i = 0; i < (int)ids->size(); i++) {
 
         musly_trackid curid = ids->at(i);
+        //std::cout << "Similarities: " << similarities[i] << std::endl;
 
         // skip self
         if (seed == curid) {
@@ -520,6 +524,8 @@ compute_playlist(
     for (int i = 0; i < k; i++) {
         int j = track_idx[i].first;
         pl << tracks_files[j] << std::endl;
+        std::cout << "Similarity Float: " << track_idx[i].second << std::endl;
+
     }
 
     return pl.str();

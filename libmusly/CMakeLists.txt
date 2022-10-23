@@ -58,6 +58,9 @@ if(BUILD_STATIC)
         PROPERTIES COMPILE_FLAGS "-DBUILD_STATIC")
 endif()
 
+find_package(TBB REQUIRED)
+
+
 # This defines MUSLY_BUILDING_LIBRARY *only when building as shared library*,
 # allowing us to use __declspec(dllexport) instead of dllimport on Windows.
 set_target_properties(libmusly
@@ -65,10 +68,11 @@ set_target_properties(libmusly
 
 target_link_libraries(libmusly
     ${LIBMUSLY_LIBS}
-    ${LIBAV_LIBRARIES})
+    ${LIBAV_LIBRARIES}
+     TBB::tbb)
 if(WIN32 OR MINGW)
     # link against winsock2 for ntohl() and htonl()
-    target_link_libraries(libmusly ws2_32)
+    target_link_libraries(libmusly ws2_32 TBB::tbb)
 endif()
 
 set_target_properties(libmusly

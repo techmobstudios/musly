@@ -143,6 +143,8 @@ gaussian_statistics::jensenshannon(
         }
     }
 
+
+
     // Do an inplace cholesky decompositon and compute logdet of the merged
     // Gaussian.
     int idx_ii = 0;
